@@ -1,148 +1,128 @@
-import React, { useState, useEffect } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import React from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { products } from '../data/products';
+import SearchBar from '../components/SearchBar';
+import CategoryFilter from '../components/CategoryFilter';
+import ProductItem from '../components/ProductItem';
+import Pagination from '../components/Pagination';
 
-function ProductList() {
+const ITEMS_PER_PAGE = 3;
+
+const ProductList = () => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const keywordFromUrl = searchParams.get("keyword") || "";
-  const sort = searchParams.get("sort") || "";
 
-  const [searchTerm, setSearchTerm] = useState(keywordFromUrl);
+  const keyword = (searchParams.get('keyword') || '').trim();
+  const category = (searchParams.get('category') || '').trim();
+  const sort = searchParams.get('sort') || 'default';
+  const pageParam = parseInt(searchParams.get('page') || '1', 10);
+  const currentPage = isNaN(pageParam) || pageParam < 1 ? 1 : pageParam;
 
-  useEffect(() => {
-    setSearchTerm(keywordFromUrl);
-  }, [keywordFromUrl]);
+  // Filter products by keyword and category
+  let filtered = products.filter((product) => {
+    const matchesKeyword = keyword
+      ? product.name.toLowerCase().includes(keyword.toLowerCase())
+      : true;
 
-  
-  let filterKeyword = products.filter((product) =>
-    product.name.toLowerCase().includes(keywordFromUrl.toLowerCase())
-  );
+    const matchesCategory =
+      category && category !== 'All Categories'
+        ? product.category.toLowerCase() === category.toLowerCase()
+        : true;
 
-  
-  if (sort === "price-asc") {
-    filterKeyword.sort((a, b) => a.price - b.price);
-  } else if (sort === "price-desc") {
-    filterKeyword.sort((a, b) => b.price - a.price);
+    return matchesKeyword && matchesCategory;
+  });
+
+  // Sort products
+  if (sort === 'price-asc') {
+    filtered.sort((a, b) => a.price - b.price);
+  } else if (sort === 'price-desc') {
+    filtered.sort((a, b) => b.price - a.price);
+  } else if (sort === 'name-asc') {
+    filtered.sort((a, b) => a.name.localeCompare(b.name));
+  } else if (sort === 'name-desc') {
+    filtered.sort((a, b) => b.name.localeCompare(a.name));
   }
 
-  
-  const pageParam = searchParams.get("page");
-  const page = Math.max(1, pageParam ? Number(pageParam) : 1);
-  const pageSize = 4; 
+  const totalProducts = filtered.length;
+  const totalPages = Math.ceil(totalProducts / ITEMS_PER_PAGE) || 1;
 
-  const totalPages = Math.max(1, Math.ceil(filterKeyword.length / pageSize));
-  const currentPage = Math.min(page, totalPages);
+  // Calculate slice for current page
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const currentProducts = filtered.slice(startIndex, startIndex + ITEMS_PER_PAGE);
 
-  const startIndex = (currentPage - 1) * pageSize;
-  const displayProducts = filterKeyword.slice(startIndex, startIndex + pageSize);
-
-  
-  function updateParams(changes) {
-    const nextParams = new URLSearchParams(searchParams);
-    Object.entries(changes).forEach(([key, value]) => {
-      if (value === "" || value === "none" || value === null) {
-        nextParams.delete(key);
-      } else {
-        nextParams.set(key, value);
-      }
-    });
-    setSearchParams(nextParams);
-  }
-
-  function goToPage(newPage) {
-    updateParams({ page: newPage });
-  }
-
-  function handleSearchChange(event) {
-    const value = event.target.value;
-    setSearchTerm(value);
-    updateParams({ keyword: value, page: 1 }); 
-  }
-
-  function handleSortChange(event) {
-    updateParams({ sort: event.target.value, page: 1 }); 
-  }
+  const handleSortChange = (e) => {
+    const value = e.target.value;
+    const newParams = new URLSearchParams(searchParams);
+    if (value && value !== 'default') {
+      newParams.set('sort', value);
+    } else {
+      newParams.delete('sort');
+    }
+    setSearchParams(newParams);
+  };
 
   return (
-    <div>
-      <h2>List of Products</h2>
-      
-      {/* Ô tìm kiếm */}
-      <div>
-        <label>
-          Search by name:{" "}
-          <input 
-            type="text" 
-            value={searchTerm} 
-            onChange={handleSearchChange} 
-          />
-        </label>
-      </div>
-
-      {/* Bộ lọc sắp xếp */}
-      <div style={{ marginTop: '10px' }}>
-        <label>
-          Sort by price: {" "}
-          <select value={sort} onChange={handleSortChange}>
-            <option value="none">Mặc định</option>
-            <option value="price-asc">Giá từ thấp đến cao</option>
-            <option value="price-desc">Giá từ cao đến thấp</option>
+    <div className="product-list-page">
+      {/* Controls row: Search, Category Filter, Sort */}
+      <div className="filter-controls-row">
+        <SearchBar />
+        <CategoryFilter />
+        <div className="sort-filter">
+          <select
+            className="sort-select"
+            value={sort}
+            onChange={handleSortChange}
+          >
+            <option value="default">Sắp xếp: Mặc định</option>
+            <option value="price-asc">Giá: Thấp đến Cao</option>
+            <option value="price-desc">Giá: Cao đến Thấp</option>
+           
           </select>
-        </label>
+        </div>
       </div>
 
-      {/* Hiển thị danh sách sản phẩm hoặc thông báo trống */}
-      {displayProducts.length === 0 ? (
-        <p style={{ marginTop: '15px', color: 'red' }}>Không tìm thấy sản phẩm</p>
-      ) : (
-        <ul style={{ marginTop: '15px' }}>
-          {displayProducts.map((product) => (
-            <li key={product.id}>
-              <strong>{product.name}</strong> - {product.price} {" "}
-              <Link to={`/products/${product.id}`}>View Detail</Link>
-            </li>
-          ))}
-        </ul>
-      )}
-
-      {/* Giao diện nút phân trang */}
-      <div style={{ marginTop: '20px' }}>
-        <div>
-          <button 
-            disabled={currentPage <= 1}
-            onClick={() => goToPage(currentPage - 1)}
-          >
-            previous
-          </button>
-
-          {Array.from({ length: totalPages }, (_, index) => index + 1).map(
-            (pageNumber) => (
-              <button
-                key={pageNumber}
-                onClick={() => goToPage(pageNumber)}
-                style={{
-                  fontWeight: pageNumber === currentPage ? 'bold' : 'normal'
-                }}
-              >
-                {pageNumber}
-              </button>
-            )
-          )}
-
-          <button 
-            disabled={currentPage >= totalPages}
-            onClick={() => goToPage(currentPage + 1)}
-          >
-            next
-          </button>
+      {/* Stats and pagination header row */}
+      <div className="list-stats-pagination-row">
+        <div className="stats-info">
+          Tổng: <strong>{totalProducts}</strong> | Trang: <strong>{currentPage}/{totalPages}</strong>
         </div>
+        <Pagination currentPage={currentPage} totalPages={totalPages} />
+      </div>
 
-        <div style={{ marginTop: '5px' }}>
-          Trang {currentPage}/{totalPages}
-        </div>
+      {/* Products table */}
+      <div className="table-responsive">
+        <table className="products-table">
+          <thead>
+            <tr>
+              <th style={{ width: '80px' }}>ID</th>
+              <th>Tên sản phẩm</th>
+              <th style={{ width: '180px' }}>Danh mục</th>
+              <th style={{ width: '180px' }}>Giá</th>
+              <th style={{ width: '130px' }}>Thao tác</th>
+            </tr>
+          </thead>
+          <tbody>
+            {totalProducts === 0 ? (
+              <tr>
+                <td colSpan="5" className="empty-message">
+                  Không tìm thấy sản phẩm nào phù hợp.
+                </td>
+              </tr>
+            ) : currentProducts.length === 0 ? (
+              <tr>
+                <td colSpan="5" className="empty-message">
+                  Không có sản phẩm nào ở trang này.
+                </td>
+              </tr>
+            ) : (
+              currentProducts.map((product) => (
+                <ProductItem key={product.id} product={product} />
+              ))
+            )}
+          </tbody>
+        </table>
       </div>
     </div>
   );
-}
+};
 
 export default ProductList;
