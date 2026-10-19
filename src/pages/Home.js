@@ -1,12 +1,18 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 
-function Home() {
+const Home = () => {
   return (
-    <div>
-      <h2>Welcome to ProductStore</h2>
-      <h3>manage and explore products for your needs.</h3>
+    <div className="home-page">
+      <div className="hero-section">
+        <h1 className="hero-title">Welcome to ProductStore</h1>
+        <p className="hero-subtitle">Manage and explore products for your needs.</p>
+        <Link to="/products" className="btn-view-products">
+          View Products
+        </Link>
+      </div>
     </div>
   );
-}
+};
 
 export default Home;

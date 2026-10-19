@@ -36,7 +36,7 @@ function ProductList() {
   const startIndex = (currentPage - 1) * pageSize;
   const displayProducts = filterKeyword.slice(startIndex, startIndex + pageSize);
 
-  // Hàm cập nhật các tham số trên URL
+  
   function updateParams(changes) {
     const nextParams = new URLSearchParams(searchParams);
     Object.entries(changes).forEach(([key, value]) => {
@@ -56,11 +56,11 @@ function ProductList() {
   function handleSearchChange(event) {
     const value = event.target.value;
     setSearchTerm(value);
-    updateParams({ keyword: value, page: 1 }); // Reset về trang 1 khi tìm kiếm
+    updateParams({ keyword: value, page: 1 }); 
   }
 
   function handleSortChange(event) {
-    updateParams({ sort: event.target.value, page: 1 }); // Reset về trang 1 khi sắp xếp
+    updateParams({ sort: event.target.value, page: 1 }); 
   }
 
   return (

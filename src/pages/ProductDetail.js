@@ -6,14 +6,7 @@ function ProductDetail() {
   const { id } = useParams();
   const product = products.find((item) => item.id === Number(id));
 
-  if (!product) {
-    return (
-      <div>
-        <h1>Không tìm thấy sản phẩm có ID: {id}</h1>
-        <Link to="/products">&larr; Quay lại danh sách</Link>
-      </div>
-    );
-  }
+  
 
   return (
     <div>

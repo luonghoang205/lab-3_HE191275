@@ -1,28 +1,25 @@
-import './App.css';
-import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
-
+import React from 'react';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import Header from './components/Header';
 import Home from './pages/Home';
 import ProductList from './pages/ProductList';
 import ProductDetail from './pages/ProductDetail';
+import NotFound from './pages/NotFound';
+import './App.css';
 
 function App() {
   return (
     <BrowserRouter>
-      <div>
-       
-        
-        {/* Thanh menu điều hướng chung */}
-        <nav style={{ marginBottom: '20px' }}>
-          <Link to="/">Home Page</Link> {" | "}
-          <Link to="/products">Products</Link>
-        </nav>
-
-        {/* Khai báo các Routes */}
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/products" element={<ProductList />} />
-          <Route path="/products/:id" element={<ProductDetail />} />
-        </Routes>
+      <div className="app-layout">
+        <Header />
+        <main className="main-content">
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/products" element={<ProductList />} />
+            <Route path="/products/:id" element={<ProductDetail />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </main>
       </div>
     </BrowserRouter>
   );
